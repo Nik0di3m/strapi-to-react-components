@@ -33,7 +33,7 @@ fn main() -> io::Result<()> {
 
     let args: Vec<String> = std::env::args().collect();
     if args.len() < 2 {
-        eprintln!("Użycie: {} <ścieżka_do_komponentów_strapi>", args[0]);
+        eprintln!("How to use: {} <path_to_yor_strapi_components>", args[0]);
         std::process::exit(1);
     }
 
@@ -52,7 +52,7 @@ fn main() -> io::Result<()> {
         writeln!(io::stdout(), "Parent: {}", parent.display())?;
         let file = File::open(path.path()).unwrap();
         let component: StrapiComponent = serde_json::from_reader(file)?;
-        let output_path = format!("{}/components/{}/{}.jsx", current_dir.display() ,parent.display(), component.info.displayName);
+        let output_path = format!("{}/components/{}/{}.jsx", current_dir.display() ,parent.display(), capitalize_first_letter(&component.info.displayName));
         writeln!(io::stdout(), "Output: {}", output_path)?;
         if let Some(dir_path) = Path::new(&output_path).parent() {
             fs::create_dir_all(dir_path)?;
@@ -64,6 +64,13 @@ fn main() -> io::Result<()> {
     writeln!(io::stdout(), "Done!")?;
 
     Ok(())
+}
+
+fn capitalize_first_letter(s: &str) -> String {
+    s.char_indices()
+     .next()
+     .map(|(i, c)| c.to_uppercase().collect::<String>() + &s[i+1..])
+     .unwrap_or_else(|| String::new())
 }
 
 fn generate_react_component(component: &StrapiComponent) -> String {
@@ -89,7 +96,7 @@ fn generate_react_component(component: &StrapiComponent) -> String {
 
 export default {name};
 ",
-        name = component.info.displayName,
+        name = capitalize_first_letter(&component.info.displayName),
         props = formated_props,
         jsx = jsx
     )
